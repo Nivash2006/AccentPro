@@ -4,8 +4,8 @@ import { xpToLevel } from '@/lib/utils'
 import type { Badge } from '@/types'
 
 const BADGES: Badge[] = [
-  { id: 'first-lesson', name: 'First Steps', description: 'Complete your first lesson', icon: '🎯', color: '#10b981', earned: true, earned_at: '2026-08-01', requirement: 'Complete 1 lesson' },
-  { id: 'streak-7', name: 'Week Warrior', description: '7-day learning streak', icon: '🔥', color: '#f59e0b', earned: true, earned_at: '2026-08-07', requirement: '7 day streak' },
+  { id: 'first-lesson', name: 'First Steps', description: 'Complete your first lesson', icon: '🎯', color: '#10b981', earned: false, requirement: 'Complete 1 lesson' },
+  { id: 'streak-7', name: 'Week Warrior', description: '7-day learning streak', icon: '🔥', color: '#f59e0b', earned: false, requirement: '7 day streak' },
   { id: 'vocab-100', name: 'Word Wizard', description: 'Learn 100 vocabulary words', icon: '📚', color: '#8b5cf6', earned: false, requirement: 'Learn 100 words' },
   { id: 'essay-5', name: 'Essay Expert', description: 'Write 5 evaluated essays', icon: '✍️', color: '#3b5bdb', earned: false, requirement: 'Write 5 essays' },
   { id: 'speaking-pro', name: 'Speaking Pro', description: 'Complete 10 speaking sessions', icon: '🎤', color: '#ec4899', earned: false, requirement: '10 speaking sessions' },
@@ -31,21 +31,22 @@ interface GamificationState {
   checkAndUpdateStreak: () => void
   earnBadge: (badgeId: string) => void
   addStudyMinutes: (minutes: number) => void
+  resetToBasics: () => void
 }
 
 export const useGamificationStore = create<GamificationState>()(
   persist(
     (set, get) => ({
-      xp: 2840,
-      level: 6,
-      xpProgress: 65,
-      nextLevelXP: 3600,
-      streakDays: 7,
+      xp: 0,
+      level: 1,
+      xpProgress: 0,
+      nextLevelXP: 500,
+      streakDays: 0,
       lastActivityDate: new Date().toISOString().split('T')[0],
       badges: BADGES,
-      weeklyXP: 420,
+      weeklyXP: 0,
       dailyGoalMinutes: 30,
-      dailyCompletedMinutes: 18,
+      dailyCompletedMinutes: 0,
       addXP: (amount) => {
         const newXP = get().xp + amount
         const { level, progress, nextLevelXP } = xpToLevel(newXP)
@@ -78,6 +79,17 @@ export const useGamificationStore = create<GamificationState>()(
         set((state) => ({
           dailyCompletedMinutes: state.dailyCompletedMinutes + minutes,
         })),
+      resetToBasics: () =>
+        set({
+          xp: 0,
+          level: 1,
+          xpProgress: 0,
+          nextLevelXP: 500,
+          streakDays: 0,
+          weeklyXP: 0,
+          dailyCompletedMinutes: 0,
+          badges: BADGES.map((b) => ({ ...b, earned: false, earned_at: undefined })),
+        }),
     }),
     { name: 'accent-pro-gamification' }
   )

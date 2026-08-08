@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Mail, Lock, Phone, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react'
+import { Mail, Lock, Phone, ArrowRight, ShieldCheck, Sparkles, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { supabase } from '@/lib/supabase'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -13,25 +14,49 @@ export default function Login() {
   const [phone, setPhone] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otp, setOtp] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setUser({
-      id: 'demo-user-123',
-      email: email || 'student@accentpro.ai',
-      full_name: 'Alex Mercer',
-      role: 'student',
-      cefr_level: 'B2',
-      target_exam: 'ielts',
-      target_band: 8.5,
-      xp: 2840,
-      level: 6,
-      streak_days: 7,
-      last_activity: new Date().toISOString(),
-      preferred_language: 'en',
-      created_at: new Date().toISOString(),
-    })
-    navigate('/dashboard')
+    setLoading(true)
+    setErrorMessage('')
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setErrorMessage(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data?.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email ?? email,
+          full_name: data.user.user_metadata?.full_name ?? 'Learner',
+          role: 'student',
+          cefr_level: data.user.user_metadata?.cefr_level ?? 'A1',
+          target_exam: data.user.user_metadata?.target_exam ?? 'ielts',
+          target_band: data.user.user_metadata?.target_band ?? 8.5,
+          xp: 0,
+          level: 1,
+          streak_days: 0,
+          last_activity: new Date().toISOString(),
+          preferred_language: 'en',
+          created_at: data.user.created_at,
+        })
+        navigate('/dashboard')
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to sign in.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -56,6 +81,13 @@ export default function Login() {
             Phone OTP
           </button>
         </div>
+
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center font-medium flex items-center justify-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            {errorMessage}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           {method === 'email' ? (
@@ -101,8 +133,8 @@ export default function Login() {
             </>
           )}
 
-          <button type="submit" className="w-full py-3.5 rounded-xl bg-gradient-primary text-white font-bold text-sm shadow-neon-emerald hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-            Sign In to Account
+          <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-primary text-white font-bold text-sm shadow-neon-emerald hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+            {loading ? 'Signing In...' : 'Sign In to Account'}
             <ArrowRight className="h-4 w-4" />
           </button>
         </form>
@@ -110,7 +142,7 @@ export default function Login() {
         <div className="mt-6 text-center text-xs text-muted-foreground">
           Don't have an account?{' '}
           <Link to="/register" className="text-primary font-semibold hover:underline">
-            Register for Free
+            Register Here
           </Link>
         </div>
       </motion.div>

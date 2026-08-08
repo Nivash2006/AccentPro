@@ -61,25 +61,58 @@ function ThemeWrapper({ children }: { children: React.ReactNode }) {
 
 function AuthListener() {
   const { setUser, setSession, setLoading } = useAuthStore()
+
   useEffect(() => {
-    // Default user is auto-initialized to prevent white loading screen on initial access
-    setUser({
-      id: 'demo-user-123',
-      email: 'student@accentpro.ai',
-      full_name: 'Bhubesh',
-      role: 'student',
-      cefr_level: 'B2',
-      target_exam: 'ielts',
-      target_band: 8.5,
-      xp: 3450,
-      level: 7,
-      streak_days: 12,
-      last_activity: new Date().toISOString(),
-      preferred_language: 'en',
-      created_at: new Date().toISOString(),
+    // Check active Supabase session
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      if (data.session?.user) {
+        setUser({
+          id: data.session.user.id,
+          email: data.session.user.email ?? 'student@accentpro.ai',
+          full_name: data.session.user.user_metadata?.full_name ?? 'Learner',
+          role: 'student',
+          cefr_level: data.session.user.user_metadata?.cefr_level ?? 'A1',
+          target_exam: data.session.user.user_metadata?.target_exam ?? 'ielts',
+          target_band: data.session.user.user_metadata?.target_band ?? 8.5,
+          xp: 0,
+          level: 1,
+          streak_days: 0,
+          last_activity: new Date().toISOString(),
+          preferred_language: 'en',
+          created_at: data.session.user.created_at,
+        })
+      }
+      setLoading(false)
+    }).catch(() => {
+      setLoading(false)
     })
-    setLoading(false)
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email ?? 'student@accentpro.ai',
+          full_name: session.user.user_metadata?.full_name ?? 'Learner',
+          role: 'student',
+          cefr_level: session.user.user_metadata?.cefr_level ?? 'A1',
+          target_exam: session.user.user_metadata?.target_exam ?? 'ielts',
+          target_band: session.user.user_metadata?.target_band ?? 8.5,
+          xp: 0,
+          level: 1,
+          streak_days: 0,
+          last_activity: new Date().toISOString(),
+          preferred_language: 'en',
+          created_at: session.user.created_at,
+        })
+      }
+      setLoading(false)
+    })
+
+    return () => subscription.unsubscribe()
   }, [setUser, setSession, setLoading])
+
   return null
 }
 

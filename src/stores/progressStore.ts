@@ -11,34 +11,35 @@ interface ProgressState {
   grePrediction: number
   updateProgress: (module: Module, skill?: Skill, data?: Partial<Progress>) => void
   addStudyTime: (minutes: number) => void
+  resetProgress: () => void
 }
 
-const defaultProgress = (): Progress => ({
+const defaultProgress = (moduleName: Module, total = 20): Progress => ({
   user_id: '',
-  module: 'foundation',
+  module: moduleName,
   completed_lessons: 0,
-  total_lessons: 20,
+  total_lessons: total,
   score: 0,
   last_updated: new Date().toISOString(),
 })
 
 export const useProgressStore = create<ProgressState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       progress: {
-        foundation: { ...defaultProgress(), module: 'foundation', total_lessons: 24, completed_lessons: 6, score: 72 },
-        ielts: { ...defaultProgress(), module: 'ielts', total_lessons: 40, completed_lessons: 12, score: 65, band_prediction: 6.5 },
-        toefl: { ...defaultProgress(), module: 'toefl', total_lessons: 30, completed_lessons: 4, score: 58 },
-        gre: { ...defaultProgress(), module: 'gre', total_lessons: 25, completed_lessons: 2, score: 45 },
-        campus: { ...defaultProgress(), module: 'campus', total_lessons: 20, completed_lessons: 0, score: 0 },
-        corporate: { ...defaultProgress(), module: 'corporate', total_lessons: 15, completed_lessons: 0, score: 0 },
-        interview: { ...defaultProgress(), module: 'interview', total_lessons: 18, completed_lessons: 0, score: 0 },
+        foundation: defaultProgress('foundation', 24),
+        ielts: defaultProgress('ielts', 40),
+        toefl: defaultProgress('toefl', 30),
+        gre: defaultProgress('gre', 25),
+        campus: defaultProgress('campus', 20),
+        corporate: defaultProgress('corporate', 15),
+        interview: defaultProgress('interview', 18),
       },
-      totalStudyMinutes: 1240,
-      weeklyStudyMinutes: 180,
-      overallBand: 6.5,
-      toeflPrediction: 88,
-      grePrediction: 152,
+      totalStudyMinutes: 0,
+      weeklyStudyMinutes: 0,
+      overallBand: 5.5,
+      toeflPrediction: 65,
+      grePrediction: 140,
       updateProgress: (module, _skill, data) =>
         set((state) => ({
           progress: {
@@ -51,6 +52,23 @@ export const useProgressStore = create<ProgressState>()(
           totalStudyMinutes: state.totalStudyMinutes + minutes,
           weeklyStudyMinutes: state.weeklyStudyMinutes + minutes,
         })),
+      resetProgress: () =>
+        set({
+          progress: {
+            foundation: defaultProgress('foundation', 24),
+            ielts: defaultProgress('ielts', 40),
+            toefl: defaultProgress('toefl', 30),
+            gre: defaultProgress('gre', 25),
+            campus: defaultProgress('campus', 20),
+            corporate: defaultProgress('corporate', 15),
+            interview: defaultProgress('interview', 18),
+          },
+          totalStudyMinutes: 0,
+          weeklyStudyMinutes: 0,
+          overallBand: 5.5,
+          toeflPrediction: 65,
+          grePrediction: 140,
+        }),
     }),
     { name: 'accent-pro-progress' }
   )
