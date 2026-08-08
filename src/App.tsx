@@ -82,9 +82,13 @@ function AuthListener() {
           preferred_language: 'en',
           created_at: data.session.user.created_at,
         })
+      } else {
+        // No session: clear mock user state
+        setUser(null)
       }
       setLoading(false)
     }).catch(() => {
+      setUser(null)
       setLoading(false)
     })
 
@@ -106,6 +110,8 @@ function AuthListener() {
           preferred_language: 'en',
           created_at: session.user.created_at,
         })
+      } else {
+        setUser(null)
       }
       setLoading(false)
     })
@@ -116,6 +122,20 @@ function AuthListener() {
   return null
 }
 
+function ProtectedAppLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading } = useAuthStore()
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-background text-muted-foreground text-sm">Loading Accent Pro Institute...</div>
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  return <AppShell>{children}</AppShell>
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -124,9 +144,9 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Main App Routes wrapped in AppShell */}
+      {/* Main App Routes protected by Supabase Auth */}
       <Route path="/*" element={
-        <AppShell>
+        <ProtectedAppLayout>
           <Routes>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
@@ -158,7 +178,7 @@ function AppRoutes() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-        </AppShell>
+        </ProtectedAppLayout>
       } />
     </Routes>
   )

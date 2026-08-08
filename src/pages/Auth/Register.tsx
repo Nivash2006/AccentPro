@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Mail, Lock, Target, Award, ArrowRight, CheckCircle2, Send } from 'lucide-react'
+import { User, Mail, Lock, Target, Award, ArrowRight, CheckCircle2, Send, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useProgressStore } from '@/stores/progressStore'
@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase'
 
 export default function Register() {
   const navigate = useNavigate()
-  const { setUser } = useAuthStore()
+  const { clearSession } = useAuthStore()
   const { resetToBasics } = useGamificationStore()
   const { resetProgress } = useProgressStore()
 
@@ -27,11 +27,13 @@ export default function Register() {
     setLoading(true)
     setErrorMessage('')
 
-    // Reset progress stores to level 1, 0 XP, 0 completed lessons for new account
+    // 1. Purge all cached local storage stats so new user starts 100% fresh from Level 1
+    clearSession()
     resetToBasics()
     resetProgress()
 
     try {
+      // 2. Call real Supabase Auth signup
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -40,6 +42,7 @@ export default function Register() {
             full_name: fullName,
             target_exam: targetExam,
             target_band: parseFloat(targetBand),
+            cefr_level: 'A1',
           },
           emailRedirectTo: `${window.location.origin}/login`,
         },
@@ -51,7 +54,7 @@ export default function Register() {
         return
       }
 
-      // Always require verification link confirmation
+      // Always require email confirmation link
       setVerificationSent(true)
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to register account.')
@@ -71,12 +74,13 @@ export default function Register() {
               <div className="w-12 h-12 rounded-2xl bg-gradient-primary mx-auto flex items-center justify-center mb-4 shadow-neon-emerald">
                 <span className="text-white font-bold text-2xl">A</span>
               </div>
-              <h1 className="text-2xl font-display font-bold">Create Learner Account</h1>
-              <p className="text-sm text-muted-foreground mt-1">Start from Level 1 basics towards IELTS Band 9</p>
+              <h1 className="text-2xl font-display font-bold">Register Learner Account</h1>
+              <p className="text-sm text-muted-foreground mt-1">Start from Level 1 basics towards Band 8.5+</p>
             </div>
 
             {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center font-medium">
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center font-medium flex items-center justify-center gap-2">
+                <AlertCircle className="h-4 w-4" />
                 {errorMessage}
               </div>
             )}
@@ -130,7 +134,7 @@ export default function Register() {
               </div>
 
               <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl bg-gradient-primary text-white font-bold text-sm shadow-neon-emerald hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mt-2">
-                {loading ? 'Creating Account & Sending Verification Email...' : 'Register Account'}
+                {loading ? 'Creating Account & Sending Email...' : 'Register Account'}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </form>
@@ -157,10 +161,10 @@ export default function Register() {
 
             <div className="p-4 rounded-2xl glass border border-white/10 text-xs text-muted-foreground text-left space-y-2">
               <div className="flex items-center gap-2 text-emerald-400 font-bold">
-                <CheckCircle2 className="h-4 w-4" /> Account Security Requirement
+                <CheckCircle2 className="h-4 w-4" /> Email Confirmation Required
               </div>
               <p className="leading-relaxed">
-                Please open your email inbox (and check your Spam/Junk folder if needed), then click the <strong className="text-foreground">"Confirm Your Account"</strong> link.
+                Please open your email inbox (and check your Spam folder if needed), then click the <strong className="text-foreground">"Confirm Your Account"</strong> link.
               </p>
               <p className="text-[11px] text-muted-foreground italic">
                 After confirming your email, return here and sign in to start your level 1 lessons.

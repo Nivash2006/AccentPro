@@ -52,7 +52,8 @@ export const useProgressStore = create<ProgressState>()(
           totalStudyMinutes: state.totalStudyMinutes + minutes,
           weeklyStudyMinutes: state.weeklyStudyMinutes + minutes,
         })),
-      resetProgress: () =>
+      resetProgress: () => {
+        try { localStorage.removeItem('accent-pro-progress') } catch {}
         set({
           progress: {
             foundation: defaultProgress('foundation', 24),
@@ -68,7 +69,8 @@ export const useProgressStore = create<ProgressState>()(
           overallBand: 5.5,
           toeflPrediction: 65,
           grePrediction: 140,
-        }),
+        })
+      },
     }),
     { name: 'accent-pro-progress' }
   )

@@ -79,7 +79,8 @@ export const useGamificationStore = create<GamificationState>()(
         set((state) => ({
           dailyCompletedMinutes: state.dailyCompletedMinutes + minutes,
         })),
-      resetToBasics: () =>
+      resetToBasics: () => {
+        try { localStorage.removeItem('accent-pro-gamification') } catch {}
         set({
           xp: 0,
           level: 1,
@@ -89,7 +90,8 @@ export const useGamificationStore = create<GamificationState>()(
           weeklyXP: 0,
           dailyCompletedMinutes: 0,
           badges: BADGES.map((b) => ({ ...b, earned: false, earned_at: undefined })),
-        }),
+        })
+      },
     }),
     { name: 'accent-pro-gamification' }
   )

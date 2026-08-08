@@ -12,6 +12,7 @@ interface AuthState {
   setSession: (session: unknown) => void
   setLoading: (loading: boolean) => void
   signOut: () => Promise<void>
+  clearSession: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,7 +26,12 @@ export const useAuthStore = create<AuthState>()(
       setSession: (session) => set({ session }),
       setLoading: (isLoading) => set({ isLoading }),
       signOut: async () => {
-        await supabase.auth.signOut()
+        try { await supabase.auth.signOut() } catch {}
+        try { localStorage.clear() } catch {}
+        set({ user: null, session: null, isAuthenticated: false })
+      },
+      clearSession: () => {
+        try { localStorage.clear() } catch {}
         set({ user: null, session: null, isAuthenticated: false })
       },
     }),
