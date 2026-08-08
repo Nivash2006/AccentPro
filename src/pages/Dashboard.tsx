@@ -37,12 +37,16 @@ export default function Dashboard() {
 
   // Filter modules based on student's target exam (hide other test prep modules)
   const modules = allModules.filter(mod => {
-    if (!mod.exam) return true // general modules available for all
-    return mod.exam === targetExam // only show student's chosen exam
+    if (!mod.exam) return true
+    return mod.exam === targetExam
   })
 
   const readinessScores = advisorAnalysis?.readinessScores
-  const completedNodes = ['node-tenses', 'node-passive-voice']
+  const completedNodes: string[] = []
+
+  const ieltsScore = profile.completedMockTests > 0 ? (readinessScores?.ielts?.score ?? 0) : 0
+  const toeflScore = profile.completedMockTests > 0 ? (readinessScores?.toefl?.score ?? 0) : 0
+  const greScore = profile.completedMockTests > 0 ? (readinessScores?.gre?.score ?? 0) : 0
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -66,14 +70,14 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <span className="font-bold text-base text-foreground">IELTS Academic Target Score</span>
                 <span className="text-3xl font-extrabold text-gradient-emerald">
-                  {readinessScores?.ielts?.score ?? 82}% Readiness
+                  {ieltsScore}% Readiness
                 </span>
               </div>
               <div className="h-3 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-gradient-primary rounded-full transition-all duration-700" style={{ width: `${readinessScores?.ielts?.score ?? 82}%` }} />
+                <div className="h-full bg-gradient-primary rounded-full transition-all duration-700" style={{ width: `${ieltsScore}%` }} />
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {readinessScores?.ielts?.advice ?? 'IELTS Readiness: 82% — Focus on Writing Task 2 Lexical Resource and Speaking Part 2 cues before exam date.'}
+                {readinessScores?.ielts?.advice ?? 'IELTS Readiness: 0% — Complete Foundation Module 1 lessons to begin your personalized AI band assessment.'}
               </p>
             </div>
           )}
@@ -83,14 +87,14 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <span className="font-bold text-base text-foreground">TOEFL iBT Target Score</span>
                 <span className="text-3xl font-extrabold text-cyan-400">
-                  {readinessScores?.toefl?.score ?? 68}% Readiness
+                  {toeflScore}% Readiness
                 </span>
               </div>
               <div className="h-3 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-cyan-500 rounded-full transition-all duration-700" style={{ width: `${readinessScores?.toefl?.score ?? 68}%` }} />
+                <div className="h-full bg-cyan-500 rounded-full transition-all duration-700" style={{ width: `${toeflScore}%` }} />
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {readinessScores?.toefl?.advice ?? 'TOEFL Readiness: 68% — Focus on integrated writing lecture summaries and listening note-taking.'}
+                {readinessScores?.toefl?.advice ?? 'TOEFL Readiness: 0% — Start with Foundation listening & speaking modules to build your readiness score.'}
               </p>
             </div>
           )}
@@ -100,14 +104,14 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <span className="font-bold text-base text-foreground">GRE Verbal Target Score</span>
                 <span className="text-3xl font-extrabold text-purple-400">
-                  {readinessScores?.gre?.score ?? 75}% Readiness
+                  {greScore}% Readiness
                 </span>
               </div>
               <div className="h-3 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-purple-500 rounded-full transition-all duration-700" style={{ width: `${readinessScores?.gre?.score ?? 75}%` }} />
+                <div className="h-full bg-purple-500 rounded-full transition-all duration-700" style={{ width: `${greScore}%` }} />
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                {readinessScores?.gre?.advice ?? 'GRE Verbal Readiness: 75% — Improve text completion accuracy and academic vocabulary.'}
+                {readinessScores?.gre?.advice ?? 'GRE Verbal Readiness: 0% — Complete vocabulary flashcards and grammar lessons to build your readiness score.'}
               </p>
             </div>
           )}
@@ -202,7 +206,7 @@ export default function Dashboard() {
             <div className="h-2.5 rounded-full bg-muted overflow-hidden">
               <div className="h-full bg-gradient-primary rounded-full transition-all duration-500" style={{ width: `${(dailyCompletedMinutes / dailyGoalMinutes) * 100}%` }} />
             </div>
-            <p className="text-xs text-muted-foreground">12 minutes remaining to complete today's streak.</p>
+            <p className="text-xs text-muted-foreground">{dailyGoalMinutes - dailyCompletedMinutes} minutes remaining to complete today's streak.</p>
           </div>
 
           <div className="glass-ultra p-6 rounded-3xl space-y-3">

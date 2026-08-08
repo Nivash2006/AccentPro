@@ -17,37 +17,13 @@ interface MistakeMemoryState {
   mistakes: MistakeRecord[]
   recordMistake: (data: Omit<MistakeRecord, 'id' | 'errorCount' | 'lastOccurred'>) => void
   getRepeatedMistakes: () => MistakeRecord[]
+  resetMistakes: () => void
 }
-
-const seedMistakes: MistakeRecord[] = [
-  {
-    id: 'm1',
-    mistake: 'There is many reasons for this phenomenon.',
-    correction: 'There are many reasons for this phenomenon.',
-    reason: 'Subject-verb agreement: "reasons" is plural, requiring the plural verb "are".',
-    rule: 'Always match the verb form (is/are, has/have) to the plural noun following "there".',
-    extraExample: 'There ARE several factors to consider when preparing for IELTS.',
-    topic: 'Subject-Verb Agreement',
-    errorCount: 5,
-    lastOccurred: new Date().toISOString(),
-  },
-  {
-    id: 'm2',
-    mistake: 'In the other hand, some people argue...',
-    correction: 'On the other hand, some people argue...',
-    reason: 'Fixed prepositional collocation.',
-    rule: 'The correct English contrastive marker is always "ON the other hand".',
-    extraExample: 'ON the one hand, technology saves time; ON the other hand, it distorts focus.',
-    topic: 'Fixed Collocations',
-    errorCount: 3,
-    lastOccurred: new Date().toISOString(),
-  },
-]
 
 export const useMistakeMemoryStore = create<MistakeMemoryState>()(
   persist(
     (set, get) => ({
-      mistakes: seedMistakes,
+      mistakes: [],
       recordMistake: (data) =>
         set((state) => {
           const existingIdx = state.mistakes.findIndex((m) => m.mistake.toLowerCase() === data.mistake.toLowerCase())
@@ -74,6 +50,10 @@ export const useMistakeMemoryStore = create<MistakeMemoryState>()(
           }
         }),
       getRepeatedMistakes: () => get().mistakes.filter((m) => m.errorCount >= 2),
+      resetMistakes: () => {
+        try { localStorage.removeItem('accent-pro-mistake-memory') } catch {}
+        set({ mistakes: [] })
+      },
     }),
     { name: 'accent-pro-mistake-memory' }
   )

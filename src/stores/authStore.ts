@@ -15,6 +15,17 @@ interface AuthState {
   clearSession: () => void
 }
 
+export const purgeAllStores = () => {
+  try {
+    localStorage.removeItem('accent-pro-auth')
+    localStorage.removeItem('accent-pro-gamification')
+    localStorage.removeItem('accent-pro-progress')
+    localStorage.removeItem('accent-pro-learning-profile')
+    localStorage.removeItem('accent-pro-mistake-memory')
+    localStorage.clear()
+  } catch {}
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -27,11 +38,11 @@ export const useAuthStore = create<AuthState>()(
       setLoading: (isLoading) => set({ isLoading }),
       signOut: async () => {
         try { await supabase.auth.signOut() } catch {}
-        try { localStorage.clear() } catch {}
+        purgeAllStores()
         set({ user: null, session: null, isAuthenticated: false })
       },
       clearSession: () => {
-        try { localStorage.clear() } catch {}
+        purgeAllStores()
         set({ user: null, session: null, isAuthenticated: false })
       },
     }),

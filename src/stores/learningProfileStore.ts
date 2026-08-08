@@ -11,38 +11,39 @@ interface LearningProfileState {
   removeWeakGrammarTopic: (topic: string) => void
   setAdvisorAnalysis: (analysis: AdvisorAnalysis) => void
   getReadiness: (exam: ExamType) => number
+  resetProfile: () => void
 }
 
-const initialProfile: LearnerProfile = {
-  id: 'user-default-1',
-  cefrLevel: 'B2',
+const freshProfile: LearnerProfile = {
+  id: 'user-fresh-1',
+  cefrLevel: 'A1',
   targetExam: 'ielts',
   targetBand: 8.5,
-  targetToeflScore: 105,
-  targetGreScore: 325,
+  targetToeflScore: 100,
+  targetGreScore: 320,
   skills: {
-    reading: 78,
-    listening: 82,
-    writing: 70,
-    speaking: 72,
-    pronunciation: 76,
-    fluency: 74,
-    grammarAccuracy: 80,
-    vocabMastery: 75,
+    reading: 0,
+    listening: 0,
+    writing: 0,
+    speaking: 0,
+    pronunciation: 0,
+    fluency: 0,
+    grammarAccuracy: 0,
+    vocabMastery: 0,
   },
-  weakGrammarTopics: ['Inversion', 'Conditionals Type 3', 'Subjunctive Mood', 'Articles with Geographical Names'],
-  weakVocabCategories: ['Academic Words List (AWL)', 'GRE High Frequency'],
-  completedMockTests: 3,
-  evaluatedEssaysCount: 4,
-  evaluatedSpeakingCount: 3,
-  learnedWordsCount: 142,
-  confidenceLevel: 82,
+  weakGrammarTopics: [],
+  weakVocabCategories: [],
+  completedMockTests: 0,
+  evaluatedEssaysCount: 0,
+  evaluatedSpeakingCount: 0,
+  learnedWordsCount: 0,
+  confidenceLevel: 0,
 }
 
 export const useLearningProfileStore = create<LearningProfileState>()(
   persist(
     (set, get) => ({
-      profile: initialProfile,
+      profile: freshProfile,
       advisorAnalysis: null,
       updateSkills: (newSkills) =>
         set((state) => ({
@@ -67,16 +68,22 @@ export const useLearningProfileStore = create<LearningProfileState>()(
         })),
       setAdvisorAnalysis: (advisorAnalysis) => set({ advisorAnalysis }),
       getReadiness: (exam) => {
+        const p = get().profile
+        if (p.completedMockTests === 0 && p.learnedWordsCount === 0) return 0
         const res = computeExamReadiness({
           exam,
-          mockTestScores: [75, 80],
-          writingEvaluations: [70, 75],
-          speakingEvaluations: [72],
-          grammarQuizAccuracy: get().profile.skills.grammarAccuracy,
-          vocabWordsMastered: get().profile.learnedWordsCount,
-          studyMinutes: 380,
+          mockTestScores: [],
+          writingEvaluations: [],
+          speakingEvaluations: [],
+          grammarQuizAccuracy: p.skills.grammarAccuracy,
+          vocabWordsMastered: p.learnedWordsCount,
+          studyMinutes: 0,
         })
         return res.score
+      },
+      resetProfile: () => {
+        try { localStorage.removeItem('accent-pro-learning-profile') } catch {}
+        set({ profile: freshProfile, advisorAnalysis: null })
       },
     }),
     { name: 'accent-pro-learning-profile' }
