@@ -5,13 +5,16 @@ import { User, Mail, Lock, Target, Award, ArrowRight, CheckCircle2, Send, AlertC
 import { useAuthStore } from '@/stores/authStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useProgressStore } from '@/stores/progressStore'
+import { useLearningProfileStore } from '@/stores/learningProfileStore'
+import { useMistakeMemoryStore } from '@/stores/mistakeMemoryStore'
 import { supabase } from '@/lib/supabase'
 
 export default function Register() {
-  const navigate = useNavigate()
   const { clearSession } = useAuthStore()
   const { resetToBasics } = useGamificationStore()
   const { resetProgress } = useProgressStore()
+  const { resetProfile } = useLearningProfileStore()
+  const { resetMistakes } = useMistakeMemoryStore()
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -27,13 +30,15 @@ export default function Register() {
     setLoading(true)
     setErrorMessage('')
 
-    // 1. Purge all cached local storage stats so new user starts 100% fresh from Level 1
+    // 1. Completely purge all local storage & stores
     clearSession()
     resetToBasics()
     resetProgress()
+    resetProfile()
+    resetMistakes()
 
     try {
-      // 2. Call real Supabase Auth signup
+      // 2. Call Supabase Auth signup
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -54,7 +59,13 @@ export default function Register() {
         return
       }
 
-      // Always require email confirmation link
+      // 3. Force sign out immediately so registration NEVER auto-logs in before email verification
+      await supabase.auth.signOut()
+      clearSession()
+      resetToBasics()
+      resetProgress()
+
+      // 4. Display mandatory verification screen
       setVerificationSent(true)
     } catch (err: any) {
       setErrorMessage(err?.message || 'Failed to register account.')
@@ -85,7 +96,7 @@ export default function Register() {
               </div>
             )}
 
-            <form onSubmit={handleRegister} className="space-y-4">
+            <form onSubmit={handleRegister} autoComplete="off" className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Full Name</label>
                 <div className="relative">
@@ -106,7 +117,7 @@ export default function Register() {
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className="w-full pl-10 pr-4 py-3 rounded-xl bg-card/50 border border-border text-sm focus:outline-none focus:border-primary transition-colors" />
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" autoComplete="new-password" className="w-full pl-10 pr-4 py-3 rounded-xl bg-card/50 border border-border text-sm focus:outline-none focus:border-primary transition-colors" />
                 </div>
               </div>
 

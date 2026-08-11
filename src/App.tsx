@@ -66,24 +66,25 @@ function AuthListener() {
     // Check active Supabase session
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
-      if (data.session?.user) {
+      const u = data.session?.user
+      // Only set user if session exists AND email is confirmed
+      if (u && (u.email_confirmed_at || u.confirmed_at)) {
         setUser({
-          id: data.session.user.id,
-          email: data.session.user.email ?? 'student@accentpro.ai',
-          full_name: data.session.user.user_metadata?.full_name ?? 'Learner',
+          id: u.id,
+          email: u.email ?? 'student@accentpro.ai',
+          full_name: u.user_metadata?.full_name ?? 'Learner',
           role: 'student',
-          cefr_level: data.session.user.user_metadata?.cefr_level ?? 'A1',
-          target_exam: data.session.user.user_metadata?.target_exam ?? 'ielts',
-          target_band: data.session.user.user_metadata?.target_band ?? 8.5,
+          cefr_level: u.user_metadata?.cefr_level ?? 'A1',
+          target_exam: u.user_metadata?.target_exam ?? 'ielts',
+          target_band: u.user_metadata?.target_band ?? 8.5,
           xp: 0,
           level: 1,
           streak_days: 0,
           last_activity: new Date().toISOString(),
           preferred_language: 'en',
-          created_at: data.session.user.created_at,
+          created_at: u.created_at,
         })
       } else {
-        // No session: clear mock user state
         setUser(null)
       }
       setLoading(false)
@@ -94,21 +95,22 @@ function AuthListener() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      if (session?.user) {
+      const u = session?.user
+      if (u && (u.email_confirmed_at || u.confirmed_at)) {
         setUser({
-          id: session.user.id,
-          email: session.user.email ?? 'student@accentpro.ai',
-          full_name: session.user.user_metadata?.full_name ?? 'Learner',
+          id: u.id,
+          email: u.email ?? 'student@accentpro.ai',
+          full_name: u.user_metadata?.full_name ?? 'Learner',
           role: 'student',
-          cefr_level: session.user.user_metadata?.cefr_level ?? 'A1',
-          target_exam: session.user.user_metadata?.target_exam ?? 'ielts',
-          target_band: session.user.user_metadata?.target_band ?? 8.5,
+          cefr_level: u.user_metadata?.cefr_level ?? 'A1',
+          target_exam: u.user_metadata?.target_exam ?? 'ielts',
+          target_band: u.user_metadata?.target_band ?? 8.5,
           xp: 0,
           level: 1,
           streak_days: 0,
           last_activity: new Date().toISOString(),
           preferred_language: 'en',
-          created_at: session.user.created_at,
+          created_at: u.created_at,
         })
       } else {
         setUser(null)
