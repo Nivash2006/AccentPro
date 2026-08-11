@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { User } from '@/types'
 import { supabase } from '@/lib/supabase'
 
@@ -26,29 +25,21 @@ export const purgeAllStores = () => {
   } catch {}
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      session: null,
-      isLoading: true,
-      isAuthenticated: false,
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
-      setSession: (session) => set({ session }),
-      setLoading: (isLoading) => set({ isLoading }),
-      signOut: async () => {
-        try { await supabase.auth.signOut() } catch {}
-        purgeAllStores()
-        set({ user: null, session: null, isAuthenticated: false })
-      },
-      clearSession: () => {
-        purgeAllStores()
-        set({ user: null, session: null, isAuthenticated: false })
-      },
-    }),
-    {
-      name: 'accent-pro-auth',
-      partialize: (state) => ({ user: state.user }),
-    }
-  )
-)
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  session: null,
+  isLoading: true,
+  isAuthenticated: false,
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setSession: (session) => set({ session }),
+  setLoading: (isLoading) => set({ isLoading }),
+  signOut: async () => {
+    try { await supabase.auth.signOut() } catch {}
+    purgeAllStores()
+    set({ user: null, session: null, isAuthenticated: false })
+  },
+  clearSession: () => {
+    purgeAllStores()
+    set({ user: null, session: null, isAuthenticated: false })
+  },
+}))
