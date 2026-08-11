@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { User, Mail, Lock, Target, Award, ArrowRight, CheckCircle2, Send, AlertCircle } from 'lucide-react'
+import { User, Mail, Lock, ArrowRight, CheckCircle2, Send, AlertCircle } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useGamificationStore } from '@/stores/gamificationStore'
 import { useProgressStore } from '@/stores/progressStore'
@@ -30,7 +30,7 @@ export default function Register() {
     setLoading(true)
     setErrorMessage('')
 
-    // 1. Completely purge all local storage & stores
+    // 1. Purge all local session stores
     clearSession()
     resetToBasics()
     resetProgress()
@@ -54,16 +54,19 @@ export default function Register() {
       })
 
       if (error) {
-        setErrorMessage(error.message)
+        if (error.status === 429 || error.message.includes('rate limit')) {
+          setErrorMessage('⚠️ Email Send Rate Limit Exceeded (429): Supabase free tier limits email sends per hour. Please wait 15-30 minutes before trying again, or disable "Confirm Email" in your Supabase Auth settings.')
+        } else {
+          setErrorMessage(error.message)
+        }
         setLoading(false)
         return
       }
 
-      // 3. Force sign out immediately so registration NEVER auto-logs in before email verification
+      // 3. Force sign out immediately so registration NEVER auto-logs in
       await supabase.auth.signOut()
       clearSession()
       resetToBasics()
-      resetProgress()
 
       // 4. Display mandatory verification screen
       setVerificationSent(true)
@@ -90,9 +93,9 @@ export default function Register() {
             </div>
 
             {errorMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center font-medium flex items-center justify-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                {errorMessage}
+              <div className="mb-4 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center font-medium leading-relaxed flex items-start gap-2">
+                <AlertCircle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+                <span>{errorMessage}</span>
               </div>
             )}
 
