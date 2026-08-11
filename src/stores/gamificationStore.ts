@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { xpToLevel } from '@/lib/utils'
 import type { Badge } from '@/types'
 
@@ -34,65 +33,60 @@ interface GamificationState {
   resetToBasics: () => void
 }
 
-export const useGamificationStore = create<GamificationState>()(
-  persist(
-    (set, get) => ({
+export const useGamificationStore = create<GamificationState>((set, get) => ({
+  xp: 0,
+  level: 1,
+  xpProgress: 0,
+  nextLevelXP: 500,
+  streakDays: 0,
+  lastActivityDate: new Date().toISOString().split('T')[0],
+  badges: BADGES,
+  weeklyXP: 0,
+  dailyGoalMinutes: 30,
+  dailyCompletedMinutes: 0,
+  addXP: (amount) => {
+    const newXP = get().xp + amount
+    const { level, progress, nextLevelXP } = xpToLevel(newXP)
+    set({
+      xp: newXP,
+      level,
+      xpProgress: progress,
+      nextLevelXP,
+      weeklyXP: get().weeklyXP + amount,
+    })
+  },
+  checkAndUpdateStreak: () => {
+    const today = new Date().toISOString().split('T')[0]
+    const last = get().lastActivityDate
+    if (last === today) return
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
+    if (last === yesterday) {
+      set({ streakDays: get().streakDays + 1, lastActivityDate: today })
+    } else {
+      set({ streakDays: 1, lastActivityDate: today })
+    }
+  },
+  earnBadge: (badgeId) =>
+    set((state) => ({
+      badges: state.badges.map((b) =>
+        b.id === badgeId ? { ...b, earned: true, earned_at: new Date().toISOString() } : b
+      ),
+    })),
+  addStudyMinutes: (minutes) =>
+    set((state) => ({
+      dailyCompletedMinutes: state.dailyCompletedMinutes + minutes,
+    })),
+  resetToBasics: () => {
+    try { localStorage.removeItem('accent-pro-gamification') } catch {}
+    set({
       xp: 0,
       level: 1,
       xpProgress: 0,
       nextLevelXP: 500,
       streakDays: 0,
-      lastActivityDate: new Date().toISOString().split('T')[0],
-      badges: BADGES,
       weeklyXP: 0,
-      dailyGoalMinutes: 30,
       dailyCompletedMinutes: 0,
-      addXP: (amount) => {
-        const newXP = get().xp + amount
-        const { level, progress, nextLevelXP } = xpToLevel(newXP)
-        set({
-          xp: newXP,
-          level,
-          xpProgress: progress,
-          nextLevelXP,
-          weeklyXP: get().weeklyXP + amount,
-        })
-      },
-      checkAndUpdateStreak: () => {
-        const today = new Date().toISOString().split('T')[0]
-        const last = get().lastActivityDate
-        if (last === today) return
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-        if (last === yesterday) {
-          set({ streakDays: get().streakDays + 1, lastActivityDate: today })
-        } else {
-          set({ streakDays: 1, lastActivityDate: today })
-        }
-      },
-      earnBadge: (badgeId) =>
-        set((state) => ({
-          badges: state.badges.map((b) =>
-            b.id === badgeId ? { ...b, earned: true, earned_at: new Date().toISOString() } : b
-          ),
-        })),
-      addStudyMinutes: (minutes) =>
-        set((state) => ({
-          dailyCompletedMinutes: state.dailyCompletedMinutes + minutes,
-        })),
-      resetToBasics: () => {
-        try { localStorage.removeItem('accent-pro-gamification') } catch {}
-        set({
-          xp: 0,
-          level: 1,
-          xpProgress: 0,
-          nextLevelXP: 500,
-          streakDays: 0,
-          weeklyXP: 0,
-          dailyCompletedMinutes: 0,
-          badges: BADGES.map((b) => ({ ...b, earned: false, earned_at: undefined })),
-        })
-      },
-    }),
-    { name: 'accent-pro-gamification' }
-  )
-)
+      badges: BADGES.map((b) => ({ ...b, earned: false, earned_at: undefined })),
+    })
+  },
+}))
